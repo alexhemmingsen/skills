@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Invoked with a component ("inspect the order card"), start at Phase 1. Invoked bare, ask one question: **Which component?**
 
-A drawer of controls opens on the left of the page the developer already has open. The controls drive the component's props, and the component stays **in context**: the page's layout, data, providers and theme. No new page is built. (For a grid of every state on a page of its own, the developer uses `/component-lab`.)
+A drawer of controls opens on the page the developer already has open. The controls drive the component's props, and the component stays **in context**: the page's layout, data, providers and theme. No new page is built. (For a grid of every state on a page of its own, or for a native project with no web page, the developer uses `/component-lab`.)
 
 ## Workflow
 
@@ -22,21 +22,23 @@ Locate the component's source and the file where the open page renders it. The p
 
 A **control** is a prop the component gets, or a field inside a prop's data (`order.status`): anything that changes what the component shows. Read the component and its types, then take values from the type: every member of a union or enum, both values of a boolean, an optional field present and absent, a list empty, one and many, text short and long.
 
-- Pick the controls that change the look, up to eight. Ids, handlers and plumbing stay out.
+- Pick every prop or field that changes what the component shows. The drawer scrolls, so completeness costs nothing; ids, handlers and plumbing are not controls.
+- Each control starts at **Original**: the page's own value, so the page looks as it did until a control moves.
 - Label each in product language (**Order state**, not `order.status`).
 - Always add **Actions** (stubbed, live), starting stubbed, so no click on the page does anything real.
 
 Print the controls in a few lines, each with its values.
 
-**Done when** every control has a label, its values and the change it makes to the props, and the list is printed.
+**Done when** every prop or field that changes the look is a control or dropped with a reason, each control has a label, its values and the change it makes to the props, and the list is printed.
 
 ### Phase 3: Wire it and open it
 
 1. Put the work in a folder named `ahem-inspect-<component>` and copy [drawer.js](drawer.js) into it.
-2. Write `Inspected` as [WRAPPER.md](WRAPPER.md) shows: it renders the real component with the selected controls applied to the props the page passes, and mounts the drawer.
-3. Swap the page's import of the component for `Inspected`. That is the only edit to the project; mark it with a comment containing `ahem-inspect`.
+2. Write the wrapper as [WRAPPER.md](WRAPPER.md) shows for the project's framework (React, Vue, Svelte, Solid, Angular, or plain HTML). In a framework it is `Inspected`: it renders the real component with the selected controls applied to the props the page passes, and mounts the drawer. Every instance the page renders through it shares the controls.
+3. Swap the page's import of the component for `Inspected` (plain HTML: add the script tag). That is the only edit to the project; mark it with a comment containing `ahem-inspect`.
 4. **Make the drawer appear on the open page yourself.** This is paramount: the developer never navigates there on their own. Hot reload usually brings it up; when it does not, reload their tab or navigate it to the page (`open <url>` on macOS, `xdg-open` on Linux, `start` on Windows, or the browser tool when you have one). Start the dev server if it is not running.
-5. Check each control: it changes the component, and "Original" brings back what the page showed. Tell the developer the drawer folds out of the way with its corner button or **Alt+I**.
+5. Check each control: it changes the component, and Original brings back what the page showed.
+6. Tell the developer how to move the drawer: **Alt+I** or the ✕ folds it away, the grip at its top center docks it on either side, and its edges resize width and height.
 
 **Done when** the drawer is visible on the developer's page, opened by you, and every control works.
 
@@ -48,7 +50,7 @@ The loop: the developer moves the controls and says what to change ("the badge s
 
 ### Phase 5: Implement and remove
 
-1. The edits are already in the real component. Swap the page's import back, so the page renders the real component again.
+1. The edits are already in the real component. Swap the page's import back (plain HTML: remove the script tag), so the page renders the real component again.
 2. Delete the `ahem-inspect-<component>` folder.
 3. Prove it is gone: a search of the repo for `ahem-inspect` finds nothing, and `git status` lists no inspector path. Stop the dev server if you started it.
 4. Run the project's checks, now that the work is production code.
