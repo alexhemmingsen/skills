@@ -46,11 +46,12 @@ Print the controls in a few lines, each with its values.
 1. Put the work in a folder named `ahem-inspect-<component>` and copy [drawer.js](drawer.js) into it.
 2. Write the wrapper as [WRAPPER.md](WRAPPER.md) shows for the project's framework (React, Vue, Svelte, Solid, Angular, or plain HTML). In a framework it is `Inspected`: it renders the real component with the selected controls applied to the props the page passes, and mounts the drawer. Every instance the page renders through it shares the controls.
 3. Swap the page's import of the component for `Inspected` (plain HTML: add the script tag). That is the only edit to the project; mark it with a comment containing `ahem-inspect`.
-4. **Make the drawer appear on the open page yourself.** This is paramount: the developer never navigates there on their own. Hot reload usually brings it up; when it does not, reload their tab or navigate it to the page (`open <url>` on macOS, `xdg-open` on Linux, `start` on Windows, or the browser tool when you have one). Start the dev server if it is not running.
-5. Check each control: it changes the component, **every part that depends on it follows** (no half-rendered state, such as a new badge above a timeline and buttons still showing the old state), and Original brings back what the page showed.
-6. Tell the developer how to move the drawer: **Alt+I** or the ✕ folds it away, the grip at its top center docks it on either side, and its edges resize width and height.
+4. Start the dev server if it is not running.
+5. **Navigate the developer to the page where the drawer is mounted, yourself, every time.** This is extremely important: the developer never navigates there on their own. Hot reload bringing the drawer up on the page they happen to have open is not enough, because that may not be the page that renders the component. Find the route where the component renders with real data (the page's path plus the id or query it needs), then send their browser there: navigate their tab with the browser tool when you have one, otherwise run `open <url>` (macOS), `xdg-open <url>` (Linux) or `start <url>` (Windows). Print the URL beside it as a courtesy, never as a substitute. When the component only shows after an interaction (a modal, a tab), navigate to the page and tell the developer the one step that reveals it. Only when every way of opening it fails, say so plainly.
+6. Check each control: it changes the component, **every part that depends on it follows** (no half-rendered state, such as a new badge above a timeline and buttons still showing the old state), and Original brings back what the page showed.
+7. Tell the developer how to move the drawer: **Alt+I** or the ✕ folds it away, the grip at its top center docks it on either side, and its edges resize width and height.
 
-**Done when** the drawer is visible on the developer's page, opened by you, and every control works.
+**Done when** you have navigated the developer's browser to the page where the drawer is mounted (step 5), the drawer is visible there, and every control works.
 
 ### Phase 4: Adjust
 
