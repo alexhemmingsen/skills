@@ -25,16 +25,15 @@ const CONTROLS = [
     read: (p) => p.order.status,                       // optional: the page's own value, shown as "Original: ..."
     options: [
       { id: 'placed', label: 'Placed', patch: (p) => ({ ...p, order: { ...p.order, status: 'placed' } }) },
-      { id: 'in_progress', label: 'In progress', patch: (p) => ({ ...p, order: { ...p.order, status: 'in_progress' } }) },
+      // one option patches every field the in-progress branches read, so the whole state shows
+      { id: 'in_progress', label: 'In progress', patch: (p) => ({ ...p, order: { ...p.order, status: 'in_progress', startedAt: p.order.startedAt ?? new Date().toISOString() } }) },
     ],
   },
-  { key: 'actions', label: 'Actions', initial: 'stubbed', noOriginal: true,
-    options: [{ id: 'stubbed', label: 'Stubbed' }, { id: 'live', label: 'Live' }] },
 ];
 
 const inspect = createInspect({
   id: 'order-card',
-  controls: CONTROLS.map(({ key, label, initial, noOriginal, options }) => ({ key, label, initial, noOriginal, options: options.map(({ id, label }) => ({ id, label })) })),
+  controls: CONTROLS.map(({ key, label, options }) => ({ key, label, options: options.map(({ id, label }) => ({ id, label })) })),
 });
 
 export function Inspected(props: React.ComponentProps<typeof OrderCard>) {
@@ -43,20 +42,20 @@ export function Inspected(props: React.ComponentProps<typeof OrderCard>) {
   CONTROLS.forEach((c) => c.read && inspect.setOriginal(c.key, String(c.read(props))));
   let p: any = props;
   for (const c of CONTROLS) { const o = c.options.find((o) => o.id === inspect.get(c.key)); if (o && 'patch' in o) p = (o as any).patch(p); }
-  if (inspect.get('actions') !== 'live') p = Object.fromEntries(Object.entries(p).map(([k, v]) => [k, typeof v === 'function' && /^on[A-Z]/.test(k) ? () => {} : v]));
   return <OrderCard {...p} />;
 }
 ```
 
 Notes:
-- The first option of every control, "Original", is the page's own value, so the page looks as it did until a control moves. `actions` has no original: it starts stubbed.
+- The first option of every control, "Original", is the page's own value, so the page looks as it did until a control moves.
+- A patch sets everything the state needs: the field the control names and the other fields that its conditional renders read (timestamps, flags, related lists). In plain HTML, the same: show, hide and fill every part that depends on the state.
 - Patch at the prop or data field the control names: a nested field (`order.status`), a flag, a list (`[]`, one item), an optional field present or absent.
-- Stubbing covers callback props (`onX`). A component that calls an API from inside its own hooks keeps doing so; tell the user when you see it.
+- The wrapper never touches the component's behavior: callbacks, handlers, forms and API calls run as they do on the page.
 - The wrapper uses `useSyncExternalStore`, so it needs React 18 or later. On older React, subscribe in an effect and keep a version counter in state.
 
 ## Other frameworks
 
-The same wrapper shape, with the framework's own way of re-rendering on `subscribe` (job 2). The patches, the stubbing and the mount are unchanged.
+The same wrapper shape, with the framework's own way of re-rendering on `subscribe` (job 2). The patches and the mount are unchanged.
 
 | Framework | Re-render on change |
 | --- | --- |
@@ -86,13 +85,11 @@ const CONTROLS = [
       { id: 'in_progress', label: 'In progress', patch: (el) => { el.dataset.status = 'in_progress'; el.querySelector('.badge').textContent = 'In progress'; } },
     ],
   },
-  { key: 'actions', label: 'Actions', initial: 'stubbed', noOriginal: true,
-    options: [{ id: 'stubbed', label: 'Stubbed' }, { id: 'live', label: 'Live' }] },
 ];
 
 const inspect = createInspect({
   id: 'order-card',
-  controls: CONTROLS.map(({ key, label, initial, noOriginal, options }) => ({ key, label, initial, noOriginal, options: options.map(({ id, label }) => ({ id, label })) })),
+  controls: CONTROLS.map(({ key, label, options }) => ({ key, label, options: options.map(({ id, label }) => ({ id, label })) })),
 });
 CONTROLS.forEach((c) => c.read && inspect.setOriginal(c.key, c.read(original)));
 
@@ -100,10 +97,6 @@ CONTROLS.forEach((c) => c.read && inspect.setOriginal(c.key, c.read(original)));
 function apply() {
   const next = original.cloneNode(true);
   for (const c of CONTROLS) { const o = c.options.find((o) => o.id === inspect.get(c.key)); if (o && o.patch) o.patch(next); }
-  if (inspect.get('actions') !== 'live') {
-    next.addEventListener('click', (e) => { if (e.target.closest('a[href], button, [type=submit]')) e.preventDefault(); });
-    next.addEventListener('submit', (e) => e.preventDefault());
-  }
   current.replaceWith(next); current = next;
 }
 inspect.subscribe(apply); inspect.mount(); apply();
@@ -111,7 +104,7 @@ inspect.subscribe(apply); inspect.mount(); apply();
 ```
 
 Notes:
-- Swapping the element drops listeners attached to the old one. That suits static markup; for a component that wires itself up with JavaScript, use its framework's wrapper.
+- Actions keep working: inline handlers (`onclick="..."`), delegated listeners on an ancestor or `document`, links and forms all survive the swap. Listeners that JavaScript attached directly to the element or its children do not; patch such a component in place (class, `data-` attribute, text on the live element) instead of swapping it, or use its framework's wrapper.
 - A page whose framework hydrates or re-renders over DOM edits (Next, Nuxt) uses that framework's wrapper too.
 
 ## Out of scope
