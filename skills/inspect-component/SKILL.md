@@ -10,6 +10,15 @@ Invoked with a component ("inspect the order card"), start at Phase 1. Invoked b
 
 A drawer of controls opens on the page the developer already has open. The controls drive the component's props, and the component stays **in context**: the page's layout, data, providers and theme. No new page is built. (For a grid of every state on a page of its own, or for a native project with no web page, the developer uses `/component-lab`.)
 
+## Speed
+
+This skill must not break the developer's flow. **Aim to have the drawer and its controls rendered on their page within 90 seconds, at most, if possible.** Stamp the start with `date` and check it before reading further.
+
+- Read only what the drawer needs: the component, its types and its usage site.
+- Make independent reads together, in one step.
+- Skip repo-wide exploration, builds and checks until Phase 5.
+- Put the drawer up with the controls the first read finds, then add the rest while the developer plays.
+
 ## Workflow
 
 ### Phase 1: Find
@@ -22,14 +31,14 @@ Locate the component's source and the file where the open page renders it. The p
 
 A **control** is a prop the component gets, or a field inside a prop's data (`order.status`): anything that changes what the component shows. Read the component and its types, then take values from the type: every member of a union or enum, both values of a boolean, an optional field present and absent, a list empty, one and many, text short and long.
 
-- Pick every prop or field that changes what the component shows. The drawer scrolls, so completeness costs nothing; ids, handlers and plumbing are not controls.
+- Start with the props and fields that most change what the component shows; the first read is enough. Ids, handlers and plumbing are not controls.
 - Each control starts at **Original**: the page's own value, so the page looks as it did until a control moves.
 - Label each in product language (**Order state**, not `order.status`).
 - Always add **Actions** (stubbed, live), starting stubbed, so no click on the page does anything real.
 
 Print the controls in a few lines, each with its values.
 
-**Done when** every prop or field that changes the look is a control or dropped with a reason, each control has a label, its values and the change it makes to the props, and the list is printed.
+**Done when** the controls the first read finds each have a label, their values and the change they make to the props, and the list is printed.
 
 ### Phase 3: Wire it and open it
 
@@ -44,7 +53,7 @@ Print the controls in a few lines, each with its values.
 
 ### Phase 4: Adjust
 
-The loop: the developer moves the controls and says what to change ("the badge should be blue", "tighten the spacing when it is in progress"). Each request becomes **one edit** to the real component, in the project's conventions (its tokens and classes), followed by a one-line reply; hot reload shows it in context. `add control <x>` and `drop control <x>` change the drawer. After a visual change, step through the control values that touch the changed part: a fix for one often breaks another. Project checks wait for Phase 5.
+While the developer plays, read on and add the controls you left out, so that every prop or field that changes the look ends up a control or dropped with a reason. The loop: the developer moves the controls and says what to change ("the badge should be blue", "tighten the spacing when it is in progress"). Each request becomes **one edit** to the real component, in the project's conventions (its tokens and classes), followed by a one-line reply; hot reload shows it in context. `add control <x>` and `drop control <x>` change the drawer. After a visual change, step through the control values that touch the changed part: a fix for one often breaks another. Project checks wait for Phase 5.
 
 **Done when** each request ends with its one edit and a one-line reply. The loop ends at `done` or `drop it`.
 
