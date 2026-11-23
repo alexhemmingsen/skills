@@ -9,8 +9,6 @@ HOW THIS PAGE BEHAVES. Copy it and edit only the "Per run" block.
 
 LAYOUT  Top bar: breadcrumb, variant select (only with 2+ variants), then the background color chip, its color picker and the project-color dropdown. Body: the grid, then a right panel of global controls (one select per axis, folds, 150 to 280px wide, scrolls vertically when there are many axes, hidden when there are no axes). The root .lab is position:fixed, inset:0, so it fills the viewport whatever the app wraps around it.
 GRID    One cell per scenario of the selected variant, each showing its state as the resting state. Every cell is live: the component feels as it does in production, on that state (hover, press, focus, drag and drop, keyboard, transitions; hover the loading button and its hover style shows). A cell under the pointer or holding focus paints over its neighbours, so panels it opens overlap them. Columns are measured from what really rendered (wide children, menus, popups), rows grow for parts that hang below, and the last row is filled so the grid is a full rectangle. No widths are configured: a component that fills its container fills its slot (max 360px).
-GAPS    A scenario with a gap note is a state the component should handle and does not (a button with no hover style, a model status the UI has no rendering for, a control wired to nothing). Its cell shows what the component really renders, tagged "Gap" with the note under it, and the top bar counts the gaps of the selected variant.
-WARNINGS  A scenario with a warn note renders but looks off (the wrong icon, a raw enum value, clipped text, an unstyled fallback). Its cell carries a red "Warning" badge with the note under it, and the top bar counts the warnings. A cell where nothing renders shows a dashed "Nothing rendered" empty state instead of a blank.
 STATE   Every control lives in the URL: variant, each axis key, bg. Axes set data-<key> on every slot and style the components only.
 MOTION  Chrome only, and little: the color picker fades and scales in from its chip (150ms), buttons answer a press (scale .97). Cells and the component never animate: the lab is a tool used all day, and the component must show production motion alone.
 COLOR   The background chip colors the whole page and the lab's own text, icons and lines follow in a contrast color (WCAG). color-scheme is set on the lab's chrome only. The project-color dropdown holds no value: it hands a color to the chip and rests. COLORS lists raw-value variables only.
@@ -29,14 +27,6 @@ COLOR   The background chip colors the whole page and the lab's own text, icons 
   .lab-top { display: flex; align-items: center; gap: 10px; flex: none; padding: 16px; border-bottom: 1px solid var(--line); }
   .lab-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--dim); opacity: .5; }
   .lab-crumb { color: var(--dim); }
-  /* the gap tag: its own yellow fill and border, so it reads on any page color */
-  .lab-gaptag { padding: 2px 4px; border: 1px solid #ffdf20; border-radius: 4px; background: #fef9c2; color: #a65f00; white-space: nowrap; }
-  .lab-gaptag[hidden] { display: none; }
-  .lab-warntag { padding: 2px 4px; border: 1px solid #fca5a5; border-radius: 4px; background: #fee2e2; color: #b91c1c; white-space: nowrap; }
-  .lab-warntag[hidden] { display: none; }
-  .lab-gapnote, .lab-warnnote { max-width: 360px; color: var(--dim); }
-  .lab-warnnote { color: #dc2626; }
-  .lab-empty { display: grid; place-items: center; box-sizing: border-box; width: 100%; min-height: 56px; border: 1px dashed var(--dim); border-radius: 8px; color: var(--dim); }
   .lab-tools { display: flex; flex: 1; align-items: center; justify-content: flex-end; gap: 16px; min-width: 0; }
   .lab-tool { display: flex; align-items: center; gap: 8px; }
   .lab-grp { display: flex; align-items: center; gap: 4px; }
@@ -101,7 +91,7 @@ COLOR   The background chip colors the whole page and the lab's own text, icons 
 <body>
 <div class="lab">
 <header class="lab-top">
-  <span>Component lab</span><i class="lab-dot"></i><span class="lab-crumb" id="crumb"></span><span class="lab-gaptag" id="gaps" hidden></span><span class="lab-warntag" id="warns" hidden></span>
+  <span>Component lab</span><i class="lab-dot"></i><span class="lab-crumb" id="crumb"></span>
   <div class="lab-tools" id="tools"></div>
 </header>
 <div class="lab-cols">
@@ -123,7 +113,7 @@ const COLORS = [ // EXAMPLES, replace with ALL of the project's color variables 
   { name: '--color-background-subtle', value: '#fafafa' },
   { name: '--color-background-inverted-base', value: '#171717' },
 ];
-const SCENARIOS = [ // { id, label, group, props, variants?, gap?, warn? } variants: ids it applies to, omit for all variants. gap: a one-line note, for a state the component should handle and does not. warn: a one-line note, for a state that renders but looks off. Both cells show what the component really does
+const SCENARIOS = [ // { id, label, group, props, variants? } variants: ids it applies to; omit for all variants
   { id: 'default', label: 'default', group: 'Data', props: {} },
   { id: 'loading', label: 'loading', group: 'Data', props: { loading: true } },
   { id: 'disabled', label: 'disabled', group: 'Data', props: { disabled: true } },
@@ -275,21 +265,10 @@ function drawBody() {
   const g = $('#grid'); g.replaceChildren();
   // a snapshot of every state of the selected variant
   scenarios().forEach((s) => {
-    const c = el('div', 'lab-cell'); const h = el('div', 'lab-head'); h.append(el('span', '', s.label)); if (s.gap) h.append(el('span', 'lab-gaptag', 'Gap')); if (s.warn) h.append(el('span', 'lab-warntag', '\u26A0 Warning'));
-    const sl = slot((host) => render(st.variant, s.props, axes(), host)); watchEmpty(sl);
-    c.append(h, sl); if (s.gap) c.append(el('div', 'lab-gapnote', s.gap)); if (s.warn) c.append(el('div', 'lab-warnnote', s.warn)); g.append(c);
+    const c = el('div', 'lab-cell'); const h = el('div', 'lab-head'); h.append(el('span', '', s.label));
+    c.append(h, slot((host) => render(st.variant, s.props, axes(), host))); g.append(c);
   });
   layoutGrid();
-}
-// A cell where nothing renders shows an empty state, never a blank. Components mount asynchronously, so the check runs after they settle and again when their content changes.
-function watchEmpty(sl) {
-  const check = () => {
-    const ph = [...sl.children].find((n) => n.classList.contains('lab-empty'));
-    const rendered = [...sl.children].filter((n) => n !== ph).some((n) => [n, ...n.querySelectorAll('*')].some((d) => { const r = d.getBoundingClientRect(); return r.width * r.height > 0; }));
-    if (!rendered && !ph) sl.append(el('div', 'lab-empty', 'Nothing rendered'));
-    if (rendered && ph) ph.remove();
-  };
-  setTimeout(check, 250); let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(check, 100); }).observe(sl, { childList: true, subtree: true });
 }
 // Nothing overflows its cell. The columns are sized from what is really rendered, including parts that stick out of the component (wide children, menus, popups), rows grow for parts that hang below, and the grid scrolls when the window is narrower. As many columns fit as the width allows, and the last row is filled out so the grid is always a complete rectangle (1 cell or 40).
 function extent(slot) { // how far the component inside the slot really reaches, right and down, from the slot's top left
@@ -316,11 +295,7 @@ function drawControls() {
   fold.onclick = () => { c.toggleAttribute('data-folded'); };
   c.replaceChildren(fold, ...AXES.map((a) => pick(a.label, a.key, a.values)));
 }
-function drawGaps() {
-  const count = (key, one, many, id) => { const n = scenarios().filter((s) => s[key]).length, t = $(id); t.hidden = !n; t.textContent = n + ' ' + (n === 1 ? one : many); };
-  count('gap', 'gap', 'gaps', '#gaps'); count('warn', 'warning', 'warnings', '#warns');
-}
-function draw() { $('#crumb').textContent = NAME; drawGaps(); applyPage(); drawTools(); drawBody(); drawControls(); }
+function draw() { $('#crumb').textContent = NAME; applyPage(); drawTools(); drawBody(); drawControls(); }
 draw();
 new ResizeObserver(layoutGrid).observe($('#mid'));
 </script>

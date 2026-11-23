@@ -1,6 +1,6 @@
 ---
 name: component-lab
-description: Inspect and work on one existing component in a throwaway lab page that shows every variant and state at once and flags the states it is missing and what looks off. Edit it with the agent, then lift it into the real component.
+description: Work on one existing component in a throwaway lab page that shows every variant and state at once. Edit it with the agent, then lift it into the real component.
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Invoked with a component ("lets work on the action button"), start at Phase 1. Invoked bare, ask one question: **Which component?**
 
-The lab is a **throwaway** page that you open in the user's browser yourself. [lab.html](lab.html) is the page; its header comment says how it behaves. It renders the project's **real component**, imported **untouched**, so what the user sees is production styling. The lab is also a **state inspector**: it lays out every state the component has, and adds a cell, tagged *Gap*, for each state it should have and does not, and flags a *Warning* on any state that renders but looks off. One marked guard goes into the project's code, and the lab is deleted when the work ends.
+The lab is a **throwaway** page that you open in the user's browser yourself. [lab.html](lab.html) is the page; its header comment says how it behaves. It renders the project's **real component**, imported **untouched**, so what the user sees is production styling. One marked guard goes into the project's code, and the lab is deleted when the work ends.
 
 ## Workflow
 
@@ -18,7 +18,7 @@ Search the project once by name. "The buttons" is a **family**: every variant. "
 
 **Done when** the component's source files are located and the scope is one sentence.
 
-### Phase 2: Discover axes and gaps
+### Phase 2: Discover axes
 
 **The lab is only as good as its list of states.** A missing state is a bug nobody sees until production, so investigate until the list is **exhaustive**.
 
@@ -37,24 +37,11 @@ Read the component file, every file it imports that shapes its output (child com
 - persistent states in the styles and markup (`:disabled`, `[aria-*]`, `[data-*]`, open, expanded, selected, focused with a value), each a cell seeded through props or initial state, and breakpoints or container queries;
 - states shown in stories, tests or fixtures that the file leaves unclear.
 
-**Inspect for gaps.** The component's code shows the states it has. Hold it against the states it *should* have, from two sources:
-
-- **General knowledge of its kind.** A button should have hover, focus-visible, pressed, disabled and loading; a text input focus, filled, placeholder, error, disabled and read-only; a list empty, one, many, loading and error; a status badge a rendering for every status. The groups are interaction, async, data and layout.
-- **The project.** The model or type behind the component, every enum and status union (each value is a state), optional fields, API shapes and fixtures, role and permission checks, the sibling components of its family, and the project's rules (`AGENTS.md`, `CLAUDE.md`, design docs).
-
-Mark each expected state **covered** (the component renders it distinctly) or a **gap**:
-
-- **Missing**: no style or branch for it (a button whose hover and focus-visible look like rest).
-- **Unhandled**: the model has the value and the UI has no specific rendering for it (an order status `in_progress` with no icon, label or color, which falls to a default or renders blank).
-- **Dead**: the UI is there and does nothing (a control with no handler, a branch no data can reach, an action wired to nothing).
-
-Every gap gets a cell with a one-line `gap` note that names its source (`Order.status` has `in_progress`; buttons convey hover). The cell renders **what the component really does** for that state (the fallback, the blank, the button that does not change), never a mock-up of what it should do. Where nothing renders at all, the lab draws its own "Nothing rendered" empty state in the cell, never a blank. Cells are live, so the user hovers the gap cell and sees nothing happen. Gaps are findings: the user decides which to fix.
-
-Group the states (Data, Interaction, Layout, whatever the component has); groups order the grid. Write the full list down, one line each, before building.
+A state the code cannot reach is not a state: list it as missing and leave it out. Group the states (Data, Interaction, Layout, whatever the component has); groups order the grid. Write the full list down, one line each, before building.
 
 Collect the project's **color variables** for the background dropdown with one search (CSS custom properties that hold colors, the Tailwind theme, a tokens file): every variable whose value is a raw color (hex, `rgb()`, `hsl()`, `oklch()`, `color()`) as `{ name, value }`. Aliases like `var(--other)` and non-colors stay out. An empty list hides the dropdown.
 
-**Done when** every prop value, branch and persistent state in the code is a cell, a sidebar control value, or dropped on purpose with a reason; every expected state, from its kind and from the project, is covered or a gap cell with its note; and the color variables are listed. Print the list, covered states and gaps apart, with the counts of variants, states and gaps.
+**Done when** every prop value, branch and persistent state in the code is a cell, a sidebar control value, or dropped on purpose with a reason, and the color variables are listed. Print the list, with how many variants and states you found.
 
 ### Phase 3: Render the real component and build
 
@@ -64,20 +51,18 @@ With no web dev server (SwiftUI, Android, a plain static site, no project), read
    Fork a copy into the folder only when the real component cannot be mounted without editing it. Say so in one line, and ask before editing the real component.
 2. **Feed each state at the data boundary**, without editing the component, in this order: props, then the app's own data seam (a seeded query cache, a mock provider, the project's request mocks, a store set before render). A fixture threaded through five levels of internals tests a path production never takes. Where the only way in is editing the component, say so and ask before adding a seam.
 3. **Keep it in the cell.** Everything the component renders stays inside its grid cell, panels included. With overlays (dialogs, menus, popovers, tooltips, toasts), read the Overlays section of [LAB-MECHANICS.md](LAB-MECHANICS.md): it also says how overlays receive the global axes. Reuse the app's own providers and components for anything the lab needs around the component, so theme, tokens and behavior come with them.
-4. **Make it testable.** Every cell is live, and **no request ever leaves the lab**: every API call, mutation, subscription and other side effect (analytics, storage, navigation) is a stub that does the UI part only. Save in a dialog closes the dialog, a submit shows its success state, Delete leaves the data as it is; the network is never touched. Navigation is a side effect too: an external link, `window.open`, `mailto:` or `tel:` link, download or route change does nothing, so the lab page never navigates away and no interaction produces its real result. Reads come from scenario data, writes go nowhere. When the component calls the API itself (a hook, a client), stub it at the app's data seam (a mocked client or provider, a mutation stub); where the only way is editing the component, say so and ask. A model-driven gap uses the model's real value (`status: 'in_progress'`). Write scenarios with product-shaped copy, real-shaped names, amounts and counts, and plausible values: three rows of "Test item" make every state look fine. Loading and pending states stay pending for good.
+4. **Make it testable.** Every cell is live, and **no request ever leaves the lab**: every API call, mutation, subscription and other side effect (analytics, storage, navigation) is a stub that does the UI part only. Save in a dialog closes the dialog, a submit shows its success state, Delete leaves the data as it is; the network is never touched. Navigation is a side effect too: an external link, `window.open`, `mailto:` or `tel:` link, download or route change does nothing, so the lab page never navigates away and no interaction produces its real result. Reads come from scenario data, writes go nowhere. When the component calls the API itself (a hook, a client), stub it at the app's data seam (a mocked client or provider, a mutation stub); where the only way is editing the component, say so and ask. Write scenarios with product-shaped copy, real-shaped names, amounts and counts, and plausible values: three rows of "Test item" make every state look fine. Loading and pending states stay pending for good.
 5. **Leave interaction to the cells.** Every interaction the component supports works in every cell on the state it shows, driven by the component's own code, so the lab adds no forcing and the component gets no extra selectors. Interactions that need handlers (drag and drop, selection, typing) get local state in `render`, so the cell responds while the callbacks stay stubbed. A state a user reaches by interacting that persists (an open menu, an expanded row, a selected tab) is its own cell, seeded through props or initial state.
-6. **Fill the page.** Copy [lab.html](lab.html) into the same folder and edit only its `Per run` block: name, variants, axes, `COLORS`, scenarios (`id`, `label`, `group`, `props`, optional `variants`, `gap` and `warn`) and `render(variant, props, force, axes, host)`, which mounts the real component. The rest stays as it is, so the lab looks the same on every run.
+6. **Fill the page.** Copy [lab.html](lab.html) into the same folder and edit only its `Per run` block: name, variants, axes, `COLORS`, scenarios (`id`, `label`, `group`, `props`, optional `variants`) and `render(variant, props, force, axes, host)`, which mounts the real component. The rest stays as it is, so the lab looks the same on every run.
 7. **Mount it.** Reach the lab with the search param `?ahem-skill=<component>` (kebab-case) on the page the app already serves, so hot reload works, through one guard where the whole app is rendered, inside the providers the component needs. Mark the guard with a comment containing `ahem-skill`: the clean-up search finds it by that marker. The Mount section of [LAB-MECHANICS.md](LAB-MECHANICS.md) has the framework specifics.
-8. **Check every cell.** Start the app's dev server if it is not running. Compare the lab's cell count with the Phase 2 list (gap cells included), check that each cell shows the mock data, not the real data and not a blank, **look at every cell as a user would** (see *Warnings* below), and use a few cells (hover, press, drag, type) to see their interactions respond. **Switch every global axis (theme, language, size, ...), then interact to open each dialog, menu, popover and toast, and check each one follows**: an overlay that ignores an axis, or sits outside its cell, is the common failure. A fixture that never appears (a refetch over the seed, live sync, a server boundary) is the common failure: fix the plumbing before handing over. With no browser to inspect, say so.
+8. **Check every cell.** Start the app's dev server if it is not running. Compare the lab's cell count with the Phase 2 list, check that each cell shows the mock data, not the real data and not a blank, and use a few cells (hover, press, drag, type) to see their interactions respond. **Switch every global axis (theme, language, size, ...), then interact to open each dialog, menu, popover and toast, and check each one follows**: an overlay that ignores an axis, or sits outside its cell, is the common failure. A fixture that never appears (a refetch over the seed, live sync, a server boundary) is the common failure: fix the plumbing before handing over. With no browser to inspect, say so.
 9. **Open the lab in the user's browser yourself.** This is paramount: the user never navigates there on their own. Run `open <url>` (macOS), `xdg-open <url>` (Linux) or `start <url>` (Windows), with `<url>` = `http://localhost:<port>/?ahem-skill=<component>`; when a browser tool is available, navigate a tab to it instead (a new tab, or the one already on the app). Print the URL beside it as a courtesy, never as a substitute. Only when every way of opening it fails, say so plainly.
 
-**Warnings.** A state can be covered and still look off. Anything that renders but looks wrong gets a `warn` note in its scenario and a red *Warning* badge in its cell: the wrong or default icon, label or color for the state (an `in_progress` order drawn like `placed`), a raw value on screen (`in_progress`, a missing translation key), clipped or overflowing text, misalignment, an unstyled fallback, low contrast, a broken layout. Judge each cell against its siblings and the component's own conventions. With a browser tool, look at the rendered cells; without one, read the styles and say you could not see them. Each note names what is off in a line.
-
-**Done when** you have opened the lab in the user's browser (step 9), it has a cell for every state on the Phase 2 list, and every cell has been looked at, with a `warn` on what looks off. Print the gaps and warnings.
+**Done when** you have opened the lab in the user's browser (step 9) and it has a cell for every state on the Phase 2 list.
 
 ### Phase 4: Talk and change
 
-The loop: the user says what to change ("rounder", "hover darker", "add an empty state", "merge those two"), and each request becomes **one edit** to the component, the scenarios or the lab page, followed by a one-line reply saying what changed. Edits to the component go straight into the real file, in the project's conventions (its tokens and classes), unless it is a fork. After a visual change, look at every state again: a fix for one often breaks another. A gap the user wants fixed is one more request: edit the component, then drop the scenario's `gap` or `warn` once its cell shows the real state. The user's eyes are the verification; project rules that ask for a browser check, tests, lint, a typecheck or a build wait for Phase 5.
+The loop: the user says what to change ("rounder", "hover darker", "add an empty state", "merge those two"), and each request becomes **one edit** to the component, the scenarios or the lab page, followed by a one-line reply saying what changed. Edits to the component go straight into the real file, in the project's conventions (its tokens and classes), unless it is a fork. After a visual change, look at every state again: a fix for one often breaks another. The user's eyes are the verification; project rules that ask for a browser check, tests, lint, a typecheck or a build wait for Phase 5.
 
 **Done when** each request ends with its one edit and a one-line reply. The loop ends at `lift out` or `drop it`.
 
@@ -101,7 +86,6 @@ While a lab exists, its files stay unstaged and uncommitted. A request to commit
 | --- | --- |
 | `<component>` | Phases 1 to 4 |
 | `<component> <detail>` | Same, narrowed ("only the destructive variant", "just loading states") |
-| `inspect <component>` | Phases 1 to 3 and the printed list of covered states and gaps, no edits until the user asks |
 | `add <scenario>` | New cell in the running lab's grid |
 | `lift out` | Phase 5: move the work into the real component, then delete the lab |
 | `drop it` | Phase 5 steps 3 and 4: delete the lab without lifting anything out |
