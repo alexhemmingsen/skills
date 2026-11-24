@@ -14,6 +14,7 @@ An illustration built without answers goes off on a tangent, and the user does n
 
 - **One thing per question.** Never fold two questions into one, and never add a second question as a "it also helps to know". Each question below is its own message.
 - **Ask plainly.** These answers are what the first attempt is built from, so ask as the important thing it is. Use the question as written, with no added hedges or extras ("it also helps to know…").
+- **Be dynamic.** An answer can cover more than the question asked, so check every earlier message before each question. Screenshots, videos and websites are the common case: when the user sends a video or a website where screenshots were asked for, take it as the answer to question 4 too and do not ask for it right after; when it is a live website, go straight to question 5. When screenshots arrive at question 4, take them as the answer to question 3.
 - **Use this format**, with the question number counting up from 1:
 
 ```
@@ -33,15 +34,17 @@ Tip: <what will get the best result>
 4. **Which video or website shows the look, feel and motion you want?**
    Tip: A live website is best, because its exact timings can be read from its code. A short screen recording works too: 3 to 5 seconds, zoomed in on what to watch.
    When the user wants to share a video, check whether ffmpeg is installed (`which ffmpeg`). When it is not, propose installing it, and install only after they agree.
-5. **Where on the page does the illustration or motion graphic go?**
+5. **Where on that website is the one you mean?** Ask only when question 4 was answered with a live website; otherwise skip it.
+   Tip: Point to the exact spot: the page, the section, or a link to it. A site holds many illustrations and animations, and the one you mean is the one the first attempt will follow.
+6. **Where on the page does the illustration or motion graphic go?**
    Tip: Say what sits above and below it, for example "below the headline, above the signup button".
-6. **Do you have any assets you prefer the illustration or motion graphic uses?**
+7. **Do you have any assets you prefer the illustration or motion graphic uses?**
    Tip: SVGs, product screenshots or UI, logos, icons. Attach them or give their file paths. Real assets look better than objects drawn from shapes.
-7. **Do you have any colors you prefer the illustration or motion graphic uses?**
+8. **Do you have any colors you prefer the illustration or motion graphic uses?**
    Tip: Give hex values or name the brand colors.
-8. **Do you have any fonts you prefer the illustration or motion graphic uses?**
+9. **Do you have any fonts you prefer the illustration or motion graphic uses?**
    Tip: Name the fonts, or say "the site's fonts". Skip this when the illustration has no text.
-9. **Do you have any text sizes you prefer the illustration or motion graphic uses?**
+10. **Do you have any text sizes you prefer the illustration or motion graphic uses?**
    Tip: Give sizes, or say "match the site". Skip this when the illustration has no text.
 
 ## Then
