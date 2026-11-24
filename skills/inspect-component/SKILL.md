@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Invoked with a component ("inspect the order card"), start at Phase 1. Invoked bare, ask one question: **Which component?**
 
-A drawer of controls opens on the page the developer already has open. The controls drive the component's props, and the component stays **in context**: the page's layout, data, providers and theme. No new page is built. (For a grid of every state on a page of its own, or for a native project with no web page, the developer uses `/component-lab`.)
+A drawer of controls opens on the page the developer already has open. The controls drive the component's props, and the component stays **in context**: the page's layout, data, providers and theme. No new page is built.
 
 ## Speed
 
@@ -57,18 +57,22 @@ Print the controls in a few lines, each with its values.
 
 While the developer plays, read on and add the controls you left out, so that every prop or field that changes the look ends up a control or dropped with a reason. The loop: the developer moves the controls and says what to change ("the badge should be blue", "tighten the spacing when it is in progress"). Each request becomes **one edit** to the real component, in the project's conventions (its tokens and classes), followed by a one-line reply; hot reload shows it in context. `add control <x>` and `drop control <x>` change the drawer. After a visual change, step through the control values that touch the changed part: a fix for one often breaks another. Project checks wait for Phase 5.
 
-**Done when** each request ends with its one edit and a one-line reply. The loop ends at `done` or `drop it`.
+**Done when** each request ends with its one edit and a one-line reply. The loop ends when the developer is finished, in any words (see Phase 5), or drops it.
 
 ### Phase 5: Implement and remove
 
-1. The edits are already in the real component. Swap the page's import back (plain HTML: remove the script tag), so the page renders the real component again.
-2. Delete the `ahem-inspect-<component>` folder.
-3. Prove it is gone: a search of the repo for `ahem-inspect` finds nothing, and `git status` lists no inspector path. Stop the dev server if you started it.
-4. Run the project's checks, now that the work is production code.
+**Run this the moment the developer says they are finished**, in any words: "done", "I'm done editing", "looks good", "implement it", "transfer it to the real component", "that is it". Run it at once and without asking: removing the inspector is the expected outcome.
 
-**Done when** the component shows the result, the repo has zero hits for `ahem-inspect`, and the checks pass.
+1. **Make sure the real component has every change.** List the edits you made in Phase 4 (your one-line replies) and check each against `git diff` of the component and its files. An edit that lives only in the `ahem-inspect-<component>` folder (a patch, a wrapper tweak, a lab-only prop) moves into the real component, in the project's conventions.
+2. Swap the page's import back (plain HTML: remove the script tag), so the page renders the real component again.
+3. Delete the `ahem-inspect-<component>` folder.
+4. Prove it is gone: a search of the repo for `ahem-inspect` finds nothing, and `git status` lists no inspector path. Stop the dev server if you started it.
+5. Run the project's checks, now that the work is production code.
+6. Report the changes in the component, one line per edit, with the files.
 
-`drop it` runs steps 1 to 3, then asks before reverting this session's edits to the component.
+**Done when** the component's diff holds every change from the session, the repo has zero hits for `ahem-inspect`, and the checks pass.
+
+`drop it` skips step 1: it runs steps 2 to 4, then asks before reverting this session's edits to the component.
 
 While the drawer exists, its files stay unstaged and uncommitted. A request to commit, push or open a PR gets a stop: say the drawer still exists, and finish or drop it first.
 
@@ -78,5 +82,5 @@ While the drawer exists, its files stay unstaged and uncommitted. A request to c
 | --- | --- |
 | `<component>` | Phases 1 to 4 |
 | `add control <x>` / `drop control <x>` | Change the drawer |
-| `done` | Phase 5: remove the drawer, keep the edits |
+| `done`, or anything that means finished | Phase 5 at once: the component keeps every change, the drawer is removed |
 | `drop it` | Remove the drawer, then ask before reverting the edits |

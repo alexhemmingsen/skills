@@ -109,4 +109,4 @@ Notes:
 
 ## Out of scope
 
-Native projects (SwiftUI, Android) have no web page to put a drawer on. `/component-lab` covers them by redrawing the component in HTML.
+Native projects (SwiftUI, Android) have no web page to put a drawer on, so this skill does not apply to them.
